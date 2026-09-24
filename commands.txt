@@ -1,0 +1,46 @@
+cd /home/aryan/Desktop/amiHacks
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r backend/requirements.txt
+cd backend
+. ../.venv/bin/activate
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+cd backend
+. ../.venv/bin/activate
+PYTHONPATH=. uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+
+5. API endpoint list
+GET /
+GET /api/health
+POST /api/ingest/simulate
+GET /api/data/latest
+GET /api/feeds/status
+GET /api/alerts
+GET /api/alerts/{zone}
+GET /api/dashboard
+Swagger: /docs
+ReDoc: /redoc
+
+6. Example curl commands
+curl http://127.0.0.1:8000/api/health
+curl -X POST "http://127.0.0.1:8000/api/ingest/simulate?disruption=true"
+curl http://127.0.0.1:8000/api/data/latest
+curl http://127.0.0.1:8000/api/feeds/status
+curl http://127.0.0.1:8000/api/alerts
+curl http://127.0.0.1:8000/api/alerts/Vaishali%20Nagar
+curl http://127.0.0.1:8000/api/dashboard
+
+
+7. Short explanation of how data flows through the backend
+Simulated feeds in weather.py, traffic.py, and incidents.py generate city-zone civic readings.
+The normalization layer in normalizer.py converts feeds into one common schema.
+ingestion.py validates, saves the rows to SQLite, and triggers anomaly/correlation analysis.
+anomaly.py applies explainable thresholds such as high rainfall or heavy congestion.
+correlation.py checks for co-occurring signals in the same zone and 
+time window without claiming causation.
+health_score.py computes a 0–100 composite city/zone health score.
+dashboard.py aggregates the results into a frontend-ready response, and summary.py generates the plain-language summary.
+The system is intentionally designed to keep working even if one feed is missing or delayed. It fails gracefully, rather than crashing the entire dashboard.
+
+If you want, I can next help you add a tiny frontend polling script or expand the alert and summary logic for an even more demo-friendly dashboard.

@@ -1,0 +1,38 @@
+.app-root { max-width: 1000px; margin: 20px auto; padding: 16px }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; font-family: Inter, system-ui, Arial, sans-serif }
+body { margin: 0; background: #0f1724; color: #e6eef8 }
+/* legacy/custom styles retained alongside Tailwind utilities */
+.topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px }
+.title { font-weight:700; letter-spacing:2px }
+.status-pill { background:#072f1f; padding:6px 10px; border-radius:14px }
+
+.mock-dashboard { background: linear-gradient(180deg,#071128 0%, #082033 100%); padding:20px; border-radius:10px }
+.health { display:flex; gap:20px; align-items:flex-start; padding:20px; background: rgba(255,255,255,0.03); border-radius:10px }
+.health-left { color:#dbeafe; flex: 0 0 240px }
+.label { color:#93c5fd; font-size:12px; margin-bottom:6px }
+.big-score { font-size:48px; font-weight:700 }
+.big-score span { font-size:14px; color:#9ca3af; margin-left:8px }
+.health-status { color:#f1f5f9; margin-top:6px; text-transform:uppercase }
+.health-right { display:flex; gap:18px; align-items:flex-start; flex: 1 1 0 }
+.map { flex: 1 1 0; min-width: 320px; height: 260px; background: linear-gradient(180deg,#062a3a 0%, #04202b 100%); border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:visible }
+.map-icons { font-size:20px }
+.map-svg { width:100%; height:100%; border-radius:8px; display:block }
+.map-svg svg { display:block }
+.zone-marker text { font-family: Inter, system-ui, Arial, sans-serif; fill: #e6eef8; font-size:10px }
+.zone-marker circle { stroke: rgba(0,0,0,0.25); stroke-width:1 }
+.alerts-panel { background: rgba(0,0,0,0.12); padding:10px 12px; border-radius:8px; min-width:260px; max-width:360px }
+.alerts-panel h4 { margin:0 0 8px }
+.alerts-panel ul { margin:0; padding:0 }
+.alerts-panel .alert { list-style:none; padding:6px 0; color:#ffe4e6 }
+.alert.high { color:#ffdede }
+.alert.medium { color:#fff4dc }
+
+.what { margin-top:14px; padding:14px; background: rgba(255,255,255,0.03); border-radius:8px }
+.what h3 { margin:0 0 8px }
+.what-text { margin:0; color:#dbeafe }
+
+.mini-footer { margin-top:12px; color:#94a3b8 }
