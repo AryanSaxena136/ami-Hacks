@@ -17,7 +17,14 @@ export default function MapInteractive({ zones = [] }) {
 
   return (
     <div style={{ width: '100%', height: '100%', borderRadius: 8, overflow: 'hidden' }}>
-      <MapContainer center={center} zoom={11} style={{ width: '100%', height: '100%' }}>
+      <MapContainer
+        center={center}
+        zoom={11}
+        scrollWheelZoom
+        dragging
+        zoomControl
+        style={{ width: '100%', height: '100%' }}
+      >
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
