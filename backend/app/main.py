@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.core.config import CORS_ORIGINS
 from app.core.database import init_db
@@ -50,3 +50,8 @@ def startup_event() -> None:
 @app.get("/", summary="Root endpoint")
 def read_root() -> dict[str, str]:
     return {"message": "CityPulse backend is running."}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> FileResponse:
+    return FileResponse("app/static/favicon.svg", media_type="image/svg+xml")
