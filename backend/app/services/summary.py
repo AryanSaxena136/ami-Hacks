@@ -5,26 +5,28 @@ from typing import Any
 
 import httpx
 
+try:
+    from langchain_groq import ChatGroq
+except ImportError:  # pragma: no cover - optional dependency at runtime
+    ChatGroq = None
+
 
 class SummaryService:
-    def _rule_based_summary(self, data: dict[str, Any]) -> str:
+    def _build_summary_prompt(self, data: dict[str, Any]) -> str:
         zone = data.get("zone") or "the monitored zone"
         rainfall = float(data.get("rainfall", 0) or 0)
         traffic = float(data.get("traffic", 0) or 0)
         incident_reports = float(data.get("incident_reports", 0) or 0)
 
-        if rainfall >= 30 and traffic >= 70 and incident_reports >= 10:
-            return (
-                f"Heavy rainfall is currently coinciding with high traffic congestion and increased "
-                f"waterlogging reports in {zone}. Residents may experience localized travel disruption."
-            )
-        if rainfall >= 30:
-            return f"Heavy rainfall is affecting {zone}. Conditions are wetter than usual and mobility may be reduced."
-        if traffic >= 70:
-            return f"Traffic congestion is elevated in {zone}. Travel delays may be noticeable during peak demand."
-        if incident_reports >= 8:
-            return f"Incident reports are elevated in {zone}. City services may need closer monitoring in this area."
-        return f"Conditions in {zone} are currently stable with no major civic disruption detected."
+        return (
+            "You are a civic operations analyst helping a city dashboard. "
+            f"The current situation in {zone} is: rainfall={rainfall}, traffic_congestion={traffic}, "
+            f"incident_reports={incident_reports}. "
+            "Your job is to generate a brief, actionable summary for city operators. "
+            "Interpret the live data, explain what is happening, note the operational impact, "
+            "and keep the summary concise, specific, and suitable for a dashboard. "
+            "Do not use fixed templates or generic threshold text. Write a unique summary based on the current signals."
+        )
 
     def _extract_llm_content(self, payload: dict[str, Any]) -> str | None:
         choices = payload.get("choices") or []
@@ -75,7 +77,46 @@ class SummaryService:
         ).rstrip("/")
         return api_key, model, base_url
 
+    def _langchain_groq_summary(self, data: dict[str, Any]) -> str | None:
+        if ChatGroq is None:
+            return None
+
+        api_key = os.getenv("GROQ_API_KEY") or os.getenv("GROK_API_KEY")
+        if not api_key:
+            return None
+
+        prompt = self._build_summary_prompt(data)
+
+        try:
+            model = ChatGroq(
+                model=os.getenv("GROQ_MODEL") or os.getenv("GROK_MODEL") or "llama-3.3-70b-versatile",
+                api_key=api_key,
+                temperature=0.2,
+            )
+            result = model.invoke(prompt)
+            content = getattr(result, "content", None)
+            if isinstance(content, str) and content.strip():
+                return content.strip()
+            if isinstance(content, list):
+                parts = []
+                for part in content:
+                    if isinstance(part, dict):
+                        text = part.get("text")
+                        if isinstance(text, str):
+                            parts.append(text)
+                combined = "".join(parts).strip()
+                if combined:
+                    return combined
+        except Exception:
+            return None
+
+        return None
+
     def _llm_summary(self, data: dict[str, Any]) -> str | None:
+        groq_summary = self._langchain_groq_summary(data)
+        if groq_summary:
+            return groq_summary
+
         llm_config = self._llm_config()
         if not llm_config:
             return None
@@ -83,29 +124,20 @@ class SummaryService:
         api_key, model, base_url = llm_config
         url = f"{base_url}/chat/completions"
 
-        zone = data.get("zone") or "the monitored zone"
-        rainfall = float(data.get("rainfall", 0) or 0)
-        traffic = float(data.get("traffic", 0) or 0)
-        incident_reports = float(data.get("incident_reports", 0) or 0)
-
-        prompt = (
-            f"You are a civic operations analyst. Summarize the current situation for {zone} using the following "
-            f"processed signals: rainfall={rainfall}, traffic_congestion={traffic}, incident_reports={incident_reports}. "
-            "Keep it concise, actionable, and suitable for a city operations dashboard."
-        )
+        prompt = self._build_summary_prompt(data)
 
         try:
             response = httpx.post(
                 url,
                 headers={
                     "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 },
                 json={
                     "model": model,
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.2,
-                    "max_tokens": 180,
+                    "max_tokens": 180
                 },
                 timeout=15.0,
             )
@@ -123,7 +155,14 @@ class SummaryService:
         llm_summary = self._llm_summary(data)
         if llm_summary:
             return llm_summary
-        return self._rule_based_summary(data)
+
+        if ChatGroq is None:
+            return "Summary is unavailable because langchain_groq is not installed."
+
+        if not self._llm_config():
+            return "Summary is unavailable because no AI API key or model is configured."
+
+        return "Summary is unavailable because the configured AI provider rejected the request (invalid key or endpoint)."
 
 
 def generate_summary(data: dict[str, Any]) -> str:

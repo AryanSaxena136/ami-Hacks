@@ -332,12 +332,18 @@ function usePollingApi(interval = 5000) {
         const json = await api.getDashboard()
 
         if (mounted) {
-          setData({
+          const merged = {
             ...demoData,
             ...json,
-            feeds_status: json.feeds_status || demoData.feeds_status,
-          })
+            city_score: demoData.city_score,
+            status: demoData.status,
+            summary: demoData.summary,
+            feeds_status: demoData.feeds_status,
+            zones: demoData.zones,
+            active_alerts: demoData.active_alerts,
+          }
 
+          setData(merged)
           setError(null)
         }
       } catch {
